@@ -143,12 +143,22 @@ class ETUser implements Runnable {
 
   void arrivedData(String msg, String value) throws IOException {
     switch(msg) {
+    case "EnterUser":
+	System.out.println("from " + getName());
+        System.out.println(ARRIVEDPHRASE + msg);
+	System.out.println();
+	String userNameList;
+	userNameList=String.join(" ", server.getUserNameList());
+	shareAll2("NewList",userNameList,true);
+	break;
       case "REMOVE_USER":
         System.out.println("from " + getName());
         System.out.println(ARRIVEDPHRASE + msg);
         System.out.println();
         int userNo = Integer.parseInt(value);
         server.removeUser(userNo);
+	userNameList=String.join(" ", server.getUserNameList());
+	shareOthers2("NewList",userNameList,true);
         if(isRemoved) {
           sendData("CLOSE_SOCKET");
           this.socket.close();
@@ -215,7 +225,53 @@ class ETUser implements Runnable {
       }
     }
   }
+    void shareOthers2(String msg, String value, boolean detail) {
+	String list[]=value.split(" ");
+	for(ETUser user : server.getUserMap().values()) {
+	    if(user!=this){
+		String data=msg+" ";
+		String name=user.getName();
+		data +=name+"<<you>>"+" ";
+		for(int i=0;i<list.length;i++){
+		    if(name.equals(list[i])){}
+		    else {
+			data +=list[i]+" ";
+		    }	
+		}
+		if(detail) System.out.println(SENDPHRASE + data + "\n");
+		else System.out.println(SENDPHRASE + msg + "\n");
+		sendDataTo(user.getSocket(), data);	
+	    }
+	}
+    }
+     void shareAll2(String msg, String value, boolean detail) {
+	String list[]=value.split(" ");
+	for(ETUser user : server.getUserMap().values()) {
+	    String data=msg+" ";
+	    String name=user.getName();
+	    data +=name+"<<you>>"+" ";
+	    for(int i=0;i<list.length;i++){
+		if(name.equals(list[i])){}
+		else {
+		    data +=list[i]+" ";
+		}	
+	    }
+	    if(detail) System.out.println(SENDPHRASE + data + "\n");
+	    else System.out.println(SENDPHRASE + msg + "\n");
+	    sendDataTo(user.getSocket(), data);	
+	}
+     }
 
+    
+    void shareAll(String msg, String value, boolean detail) {
+	for(ETUser user : server.getUserMap().values()) {
+	    String data = msg + " " + value;
+	    if(detail) System.out.println(SENDPHRASE + data + "\n");
+	    else System.out.println(SENDPHRASE + msg + "\n");
+	    sendDataTo(user.getSocket(), data);
+	}
+    }
+    
   Socket getSocket() {
     return this.socket;
   }

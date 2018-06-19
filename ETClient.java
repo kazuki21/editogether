@@ -20,6 +20,7 @@ public class ETClient extends JFrame implements Runnable {
 
   // Swingコンポーネント
   private JTextArea fileEditArea; // ファイルを編集するテキストエリア
+  private JTextArea userarea; // 参加者を表示するテキストエリア
   private JList userList; // クライアント(ユーザー)のリスト
   private JLabel filenameLabel; // ファイル名のラベル
   private JButton fileSelectButton; // ファイル選択ボタン
@@ -65,11 +66,14 @@ public class ETClient extends JFrame implements Runnable {
     filePanel.add(fileSelectButton);
     filePanel.add(fileSaveButton);
     filePanel.add(fileEditButton);
-
+    
+    userarea = new JTextArea();
+    userarea.setEditable(false);
     userPanel.setLayout(new BorderLayout());
     userPanel.add(new JLabel("Edit Friends"), BorderLayout.NORTH);
     userPanel.add(new JScrollPane(userList), BorderLayout.CENTER);
-
+    userPanel.add(userarea);
+    
     if(myName != null) {
       setTitle(APPNAME + "  " + myName);
     } else {
@@ -82,7 +86,10 @@ public class ETClient extends JFrame implements Runnable {
 
     this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     this.addWindowListener(new WindowAdapter() {
-      @Override
+     
+       public void windowOpened(WindowEvent e) {   
+	   sendData("EnterUser");	  
+      }
       public void windowClosed(WindowEvent e) {
         closeSocket(myNumber);
       }
@@ -163,6 +170,15 @@ public class ETClient extends JFrame implements Runnable {
 
   void arrivedData(String msg, String value) throws IOException {
     switch(msg) {
+    case "NewList":
+	System.out.println(ARRIVEDPHRASE + msg);
+        System.out.println();
+	userarea.setText("");
+	String[] users = value.split(" ");
+	for(int line=0;line<users.length;line++) {
+          userarea.append(users[line] + "\n");
+        }
+	break;
       case "CLOSE_SOCKET":
         System.out.println(ARRIVEDPHRASE + msg);
         System.out.println();
@@ -207,7 +223,7 @@ public class ETClient extends JFrame implements Runnable {
     } catch(Exception e) {
       e.printStackTrace();
     }
-  }
+  } 
 
   void closeSocket(int userNumber) {
     String data = "REMOVE_USER" + " " + (String.valueOf(userNumber));
